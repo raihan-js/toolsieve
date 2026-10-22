@@ -15,8 +15,8 @@ import json
 import re
 from typing import Any
 
-_REFUSE = re.compile(r"refus|cannot comply|unsafe|not appropriate|sorry,? i can.?t", re.I)
-_THINK = re.compile(r"<think>.*?</think>", re.S | re.I)
+_REFUSE = re.compile(r"refus|cannot comply|unsafe|not appropriate|sorry,? i can.?t", re.IGNORECASE)
+_THINK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
 
 def _spans(text: str) -> list[str]:

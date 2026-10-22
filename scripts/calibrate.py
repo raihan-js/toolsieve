@@ -10,8 +10,8 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from toolsieve.parse_payload import parse_payload  # noqa: E402
-from toolsieve.score import parse_call, score  # noqa: E402
+from toolsieve.parse_payload import parse_payload
+from toolsieve.score import parse_call, score
 
 NORM = {"Failure-Direct Execution": "Failure-Direct", "None": "Invalid",
         "null": "Invalid", None: "Invalid"}

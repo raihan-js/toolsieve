@@ -2,7 +2,6 @@
 results/instances.jsonl {uid, server, paradigm, risk, query, system,
 poisoned_tool, tool_names, labels, response}."""
 import json
-from pathlib import Path
 
 
 def main() -> None:
