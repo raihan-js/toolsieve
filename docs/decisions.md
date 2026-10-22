@@ -27,3 +27,12 @@
   documented capability floor.
 - Near-miss: killed an unverified PID alongside vLLM shutdown; owner
   services verified alive after. Rule: PIDs only from same-session ps.
+
+## 2026-10-22 — M1 attack reproduced (Swallow-8B, rule-scored)
+- llm-jp-1.8B base: Invalid 1.0 (echoes prompts) — capability floor, kept.
+- Swallow-8B-AWQ (chat, 1-shot, n=150 stratified): run1 ASR 0.16 / Invalid
+  0.50; run2 (think-strip + full raws) ASR 0.104 / Invalid 0.553.
+  Run-to-run gap at temp 0 = reasoning nondeterminism (serve-bench finding
+  repeats). UCC-proxy (Ignored/valid) ~0.63. Template-2: 0.0 in run 1.
+- Calibration stands: 0.805 judge agreement, conservative direction
+  (understates ASR). Same scorer grades all M4 arms.
