@@ -16,6 +16,7 @@ import re
 from typing import Any
 
 _REFUSE = re.compile(r"refus|cannot comply|unsafe|not appropriate|sorry,? i can.?t", re.I)
+_THINK = re.compile(r"<think>.*?</think>", re.S | re.I)
 
 
 def _spans(text: str) -> list[str]:
@@ -54,7 +55,7 @@ def parse_call(raw: str) -> dict[str, Any] | None:
     """
     if not raw:
         return None
-    text = raw.replace("\n", " ")
+    text = _THINK.sub(" ", raw.replace("\n", " "))
     for span in _spans(text):
         if d := _try_parse(span):
             return d

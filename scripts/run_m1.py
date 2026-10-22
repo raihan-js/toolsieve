@@ -59,7 +59,7 @@ def main() -> None:
         raw = ask(prompt, model, chat)
         p = parse_payload(r["poisoned_tool"], r["tool_names"])
         outs.append({"uid": r["uid"], "paradigm": r.get("paradigm", "?"),
-                     "outcome": score(parse_call(raw), raw, p), "raw": raw[:300]})
+                     "outcome": score(parse_call(raw), raw, p), "raw": raw})
         if (i + 1) % 25 == 0:
             print(f"  {i + 1}/{len(sub)} ({time.time() - t0:.0f}s)", flush=True)
     Path(f"results/{tag}_rows.jsonl").write_text(
