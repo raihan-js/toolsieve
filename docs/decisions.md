@@ -19,3 +19,11 @@
 - Same scorer grades every arm -> arm comparisons fair regardless. Parser
   bugs caught: greedy-span spanning, flat-match on nested args, NORM default
   swallowing real labels, generic-word evidence.
+
+## 2026-10-22 — M1 llm-jp: model floor (Invalid 1.0, echoes prompts)
+- llm-jp-1.8B base cannot follow the single-turn JSON protocol at all
+  (echoes prompt / blank). Not a harness bug: protocol needs instruction
+  tuning. Moving to Swallow-8B-AWQ (chat + 1-shot). 1.8B result kept as the
+  documented capability floor.
+- Near-miss: killed an unverified PID alongside vLLM shutdown; owner
+  services verified alive after. Rule: PIDs only from same-session ps.
