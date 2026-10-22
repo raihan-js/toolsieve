@@ -84,6 +84,6 @@ class Gateway:
             return {"ok": True, "stub": True, "tool": name, "args": args}
         try:
             return {"ok": True, "result": handler(name, args)}
-        except Exception as e:
+        except (RuntimeError, ValueError, KeyError) as e:
             self.audit("call-error", tool=name, error=type(e).__name__)
             return {"ok": False, "error": type(e).__name__}

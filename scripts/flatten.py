@@ -5,7 +5,8 @@ import json
 
 
 def main() -> None:
-    d = json.load(open("data/response_all.json", encoding="utf-8"))
+    with open("data/response_all.json", encoding="utf-8") as _f:
+        d = json.load(_f)
     n = 0
     with open("results/instances.jsonl", "w", encoding="utf-8") as f:
         for sname, s in d["servers"].items():

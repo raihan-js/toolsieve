@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from toolsieve.io import read_jsonl
 from toolsieve.parse_payload import parse_payload
 from toolsieve.score import parse_call, score
 
@@ -41,7 +42,7 @@ def main() -> None:
     model = sys.argv[1] if len(sys.argv) > 1 else "llm-jp/llm-jp-3-1.8b"
     tag = sys.argv[2] if len(sys.argv) > 2 else "m1"
     chat = model.startswith("tokyotech")
-    rows = [json.loads(l) for l in open("results/instances.jsonl", encoding="utf-8")]
+    rows = read_jsonl("results/instances.jsonl")
     by_par: dict[str, list] = {}
     for r in rows:
         by_par.setdefault(r.get("paradigm", "?"), []).append(r)

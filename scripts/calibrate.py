@@ -10,6 +10,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from toolsieve.io import read_jsonl
 from toolsieve.parse_payload import parse_payload
 from toolsieve.score import parse_call, score
 
@@ -25,7 +26,7 @@ def norm_label(lab: str | None) -> str:
 
 
 def main() -> None:
-    rows = [json.loads(l) for l in open("results/instances.jsonl", encoding="utf-8")]
+    rows = read_jsonl("results/instances.jsonl")
     agree = tot = no_target = 0
     conf: Counter = Counter()
     per_model: dict[str, Counter] = {}
