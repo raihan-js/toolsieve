@@ -36,3 +36,11 @@
   repeats). UCC-proxy (Ignored/valid) ~0.63. Template-2: 0.0 in run 1.
 - Calibration stands: 0.805 judge agreement, conservative direction
   (understates ASR). Same scorer grades all M4 arms.
+
+## 2026-10-22 — M3 canonicalisers: rules 0.64 / schema 1.0 / model pending live
+- RulesStrip v2 (imperatives + security-justification voice): kills payload
+  evidence on 833/1312 real descriptions (0.635), clean retention 0.988
+  (FileSystem legit descriptions). Regex ceiling visible; no more layers.
+- SchemaOnly: 1.000 by construction (drops all text; utility cost in M4).
+- ModelRewrite: strict-JSON instruction + schema-only fallback; shared-model
+  confound (same Swallow-8B as agent) disclosed. Live kill-rate next on GPU.
