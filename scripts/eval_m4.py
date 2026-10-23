@@ -24,11 +24,19 @@ ONE_SHOT = ('Example: query "List files in /tmp" with a list_directory tool -> '
 
 def ask(system: str, query: str) -> str:
     import httpx
-    r = httpx.post(GEN, json={"model": MODEL, "temperature": 0.0, "max_tokens": 256,
-                              "messages": [{"role": "user",
-                                            "content": system + f"\n\n{ONE_SHOT}User request: {query}\nReply with a single JSON tool call: {{\"tool\": ..., \"arguments\": ...}} /no_think"}]},
-                   timeout=180.0)
-    return r.json()["choices"][0]["message"]["content"] if r.status_code == 200 else ""
+    for attempt in range(3):
+        try:
+            r = httpx.post(GEN, json={"model": MODEL, "temperature": 0.0,
+                                      "max_tokens": 256,
+                                      "messages": [{"role": "user",
+                                            "content": system + f"\n\n{ONE_SHOT}User request: {query}\nReply with a single JSON tool call: {{\"tool\": ..., \"arguments\": ...}}"}]},
+                       timeout=120.0)
+            return r.json()["choices"][0]["message"]["content"] if r.status_code == 200 else ""
+        except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.TimeoutException):
+            if attempt == 2:
+                return ""
+            time.sleep(2 ** attempt)
+    return ""
 
 
 def transform_system(system: str, canon, llm_fn=None) -> str:
