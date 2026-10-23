@@ -50,26 +50,55 @@ def transform_system(system: str, canon, llm_fn=None) -> str:
 
 
 def run_subset(subset: list[dict], arms: dict, tag: str) -> list[dict]:
+    import httpx
+
     def llm_fn(p: str) -> str:
-        import httpx
         r = httpx.post(GEN, json={"model": MODEL, "temperature": 0.0,
                                   "max_tokens": 256,
                                   "messages": [{"role": "user", "content": p + " /no_think"}]},
                        timeout=180.0)
         return r.json()["choices"][0]["message"]["content"] if r.status_code == 200 else ""
+
+    # rewrite cache: identical tool descriptions repeat across instances
+    # (same servers); without it the model-rewrite arm costs ~10 LLM calls
+    # per item instead of ~1.
+    _cache: dict[str, dict] = {}
+    _orig_rewrite = ModelRewrite.rewrite
+
+    def cached_rewrite(self, tool):  # type: ignore[no-untyped-def]
+        key = tool.get("name", "") + "\x00" + str(tool.get("description", ""))[:500]
+        if key not in _cache:
+            _cache[key] = _orig_rewrite(self, tool)
+        return _cache[key]
+
+    ModelRewrite.rewrite = cached_rewrite  # type: ignore[method-assign]
     outs = []
     t0 = time.time()
-    for n, r in enumerate(subset):
-        p = parse_payload(r.get("poisoned_tool_eff", r["poisoned_tool"]), r["tool_names"])
-        for arm, canon in arms.items():
-            if arm == "model-rewrite":
-                canon = ModelRewrite(llm_fn)
-            sys_txt = transform_system(r.get("system_eff", r["system"]), canon) if canon else r.get("system_eff", r["system"])
-            raw = ask(sys_txt, r["query"])
-            outs.append({"uid": r["uid"], "arm": arm,
-                         "outcome": score(parse_call(raw), raw, p)})
-        if (n + 1) % 20 == 0:
-            print(f"  {tag} {n + 1}/{len(subset)} ({time.time() - t0:.0f}s)", flush=True)
+    flush_path = Path(f"results/{tag}_partial.jsonl")
+    done: set[str] = set()
+    if flush_path.exists():
+        for line in open(flush_path, encoding="utf-8"):
+            d = json.loads(line)
+            outs.append(d)
+            done.add(d["uid"] + "\x00" + d["arm"])
+    with open(flush_path, "a", encoding="utf-8") as fh:
+        for n, r in enumerate(subset):
+            p = parse_payload(r.get("poisoned_tool_eff", r["poisoned_tool"]), r["tool_names"])
+            for arm, canon in arms.items():
+                if arm == "model-rewrite":
+                    canon = ModelRewrite(llm_fn)
+                if r["uid"] + "\x00" + arm in done:
+                    continue
+                sys_txt = transform_system(r.get("system_eff", r["system"]), canon) if canon else r.get("system_eff", r["system"])
+                raw = ask(sys_txt, r["query"])
+                o = {"uid": r["uid"], "arm": arm,
+                     "outcome": score(parse_call(raw), raw, p)}
+                outs.append(o)
+                fh.write(json.dumps(o) + "\n")
+                fh.flush()
+            if (n + 1) % 20 == 0:
+                print(f"  {tag} {n + 1}/{len(subset)} cache={len(_cache)} ({time.time() - t0:.0f}s)", flush=True)
+    ModelRewrite.rewrite = _orig_rewrite  # type: ignore[method-assign]
     return outs
 
 
