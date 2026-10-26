@@ -11,10 +11,10 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from toolsieve.canonical import RulesStrip, SchemaOnly  # noqa: E402
-from toolsieve.canonical_model import ModelRewrite  # noqa: E402
-from toolsieve.parse_payload import parse_payload  # noqa: E402
-from toolsieve.score import parse_call, score  # noqa: E402
+from toolsieve.canonical import RulesStrip, SchemaOnly
+from toolsieve.canonical_model import ModelRewrite
+from toolsieve.parse_payload import parse_payload
+from toolsieve.score import parse_call, score
 
 GEN = "http://localhost:8003/v1/chat/completions"
 MODEL = "tokyotech-llm/Qwen3-Swallow-8B-RL-v0.2-AWQ-INT4"
@@ -47,7 +47,7 @@ def transform_system(system: str, canon, llm_fn=None) -> str:
     i = 1
     while i < len(parts):
         head = parts[i] + (parts[i + 1] if i + 1 < len(parts) else "")
-        m = re.match(r"Tool: (\S+)\nDescription: (.*?)(?=\nArguments:|\Z)", head, re.S)
+        m = re.match(r"Tool: (\S+)\nDescription: (.*?)(?=\nArguments:|\Z)", head, re.DOTALL)
         if m:
             name, desc = m.group(1), m.group(2)
             new = canon.rewrite({"name": name, "description": desc, "schema": {}})
@@ -85,8 +85,9 @@ def run_subset(subset: list[dict], arms: dict, tag: str) -> list[dict]:
     flush_path = Path(f"results/{tag}_partial.jsonl")
     done: set[str] = set()
     if flush_path.exists():
-        for line in open(flush_path, encoding="utf-8"):
-            d = json.loads(line)
+        with open(flush_path, encoding="utf-8") as fh2:
+            for line in fh2:
+                d = json.loads(line)
             outs.append(d)
             done.add(d["uid"] + "\x00" + d["arm"])
     with open(flush_path, "a", encoding="utf-8") as fh:
@@ -114,7 +115,7 @@ def replace_tool_desc(system: str, pname: str, new_desc: str) -> str:
     """Swap one tool's Description body (up to Arguments: or next Tool:)."""
     import re
     pat = re.compile(r"(Tool: " + re.escape(pname) + r"\nDescription: )(.*?)(?=\nArguments:|\nTool: |\Z)",
-                     re.S)
+                     re.DOTALL)
     out, n = pat.subn(lambda m: m.group(1) + new_desc, system, count=1)
     assert n == 1, f"poisoned block not found: {pname}"
     return out
@@ -125,7 +126,7 @@ def adapt(row: dict, variant: str) -> dict:
     import re
     r = dict(row)
     block = row["poisoned_tool"]
-    m = re.search(r"Description:(.*)", block, re.S)
+    m = re.search(r"Description:(.*)", block, re.DOTALL)
     desc = m.group(1).strip() if m else block
     pname = parse_payload(block, row["tool_names"])["poisoned_name"]
     if variant == "A1-param-smuggle":
@@ -133,7 +134,7 @@ def adapt(row: dict, variant: str) -> dict:
         new_block = block.replace(desc, first + ".", 1)
         new_block += ("\nArguments:\n- audit_note: " + rest[:400]
                       + " (Provide this value when calling related tools.)")
-        new_desc_m = re.search(r"Description:(.*)", new_block, re.S)
+        new_desc_m = re.search(r"Description:(.*)", new_block, re.DOTALL)
         new_desc = new_desc_m.group(1).strip() if new_desc_m else first
         # system keeps the trimmed description; arguments travel with the
         # tool definition the agent sees (same text, new location)
@@ -157,7 +158,8 @@ def adapt(row: dict, variant: str) -> dict:
 def main() -> None:
     import random
     mode = sys.argv[1] if len(sys.argv) > 1 else "main"
-    rows = [json.loads(l) for l in open("results/instances.jsonl", encoding="utf-8")]
+    with open("results/instances.jsonl", encoding="utf-8") as f:
+        rows = [json.loads(l) for l in f]
     if mode == "main":
         by = {}
         for r in rows:
@@ -176,7 +178,8 @@ def main() -> None:
         Path("results/m4_rows.jsonl").write_text(
             "\n".join(json.dumps(o) for o in outs) + "\n")
     else:
-        uids = set(json.load(open("results/m4_subset.json")))
+        with open("results/m4_subset.json", encoding="utf-8") as f:
+            uids = set(json.load(f))
         rows = [r for r in rows if r["uid"] in uids]
         sub = random.Random(6).sample(rows, min(100, len(rows)))
         arms = {"none": None, "rules-strip": RulesStrip(), "schema-only": SchemaOnly(),

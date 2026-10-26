@@ -8,7 +8,8 @@ Limitation (disclosed): uses the same Swallow-8B that acts as the agent
 from __future__ import annotations
 
 import json
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from toolsieve.gateway import Canonicaliser
 

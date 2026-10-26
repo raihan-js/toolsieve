@@ -23,7 +23,7 @@ _MUST_ACT = re.compile(
     r"this involves (calling|using)\b[^.]*(overwrite|modify|redirect|send)[^.]*\."
 )
 _HIDDEN = re.compile("[\u200b-\u200f\u202a-\u202e\u2060\ufeff]")
-_COMMENTS = re.compile(r"<!--.*?-->", re.S)
+_COMMENTS = re.compile(r"<!--.*?-->", re.DOTALL)
 
 
 class RulesStrip(Canonicaliser):

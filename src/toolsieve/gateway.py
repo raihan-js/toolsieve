@@ -35,7 +35,7 @@ class Gateway:
         self.pins: dict[str, str] = {}
         self.alerts: list[dict[str, Any]] = []
         self.audit_path = Path(audit_path)
-        self._list_cache: dict[str, Any] = {}
+        self._list_cache: dict[str, list[dict[str, Any]]] = {}
         self.canonicaliser: Canonicaliser = Canonicaliser()
 
     def audit(self, event: str, **kw: Any) -> None:

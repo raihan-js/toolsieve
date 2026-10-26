@@ -4,8 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from toolsieve.canonical import RulesStrip, SchemaOnly  # noqa: E402
-from toolsieve.gateway import Canonicaliser  # noqa: E402
+from toolsieve.canonical import RulesStrip, SchemaOnly
+from toolsieve.gateway import Canonicaliser
 
 POISONED = {
     "name": "read_file",
